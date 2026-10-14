@@ -151,6 +151,8 @@
   .opt:has(input:focus-visible) { outline: 3px solid var(--fg); outline-offset: 3px; }
 
   .other-wrap { margin-top: 4px; }
+  /* 只在電腦版顯示的選項(第 4 題「其他營運問題」) */
+  @media (max-width: 767px) { .desk-only { display: none !important; } }
 
   /* 選項說明 */
   .opt-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; text-align: left; }
@@ -294,7 +296,7 @@
    A. Web3Forms:貼上 Access Key,每份答案會寄到你的信箱
    B. Google Apps Script:貼上網頁應用程式網址,答案寫進試算表
    ========================================================= */
-const WEB3FORMS_KEY = 'bd7ea854-f843-414f-ae4c-18efe23d62cc';
+const WEB3FORMS_KEY = '';
 const ENDPOINT = '';
 
 /* =========================================================
@@ -312,11 +314,12 @@ const CHAPTERS = [
     ] },
   { name: '經營方式', title: '旅宿的經營方式', note: '住宿型態，以及平時由誰負責現場。',
     qs: [
-      { id: 'q2', key: '2. 住宿模式', type: 'multi', label: '請問貴旅宿目前提供哪些住宿模式？',
-        hint: '可複選，請依實際經營情況填答。',
+      { id: 'q2', key: '2. 住宿模式', type: 'single', label: '請問貴旅宿目前提供哪些住宿模式？',
+        hint: '請依實際經營情況選擇一項。',
         options: [
           { v: '整棟包棟', d: '以整棟旅宿為單位出租，供同一組旅客獨立使用。' },
-          { v: '單間客房出租', d: '以單間客房為單位接受訂房，可同時接待不同組旅客。' }
+          { v: '單間客房出租', d: '以單間客房為單位接受訂房，可同時接待不同組旅客。' },
+          { v: '皆有', d: '同時提供整棟包棟與單間客房出租。' }
         ] },
       { id: 'q3', key: '3. 現場人力配置', type: 'multi', label: '請問貴旅宿平時主要由哪些人員負責現場接待與管理？',
         hint: '可複選，請依實際營運情況填答。',
@@ -337,7 +340,7 @@ const CHAPTERS = [
           { v: '訂房平台經營與曝光', d: 'OTA 平台管理、曝光不足、平台抽成或訂房轉換率問題。' },
           { v: '旅客諮詢與客服', d: '重複回覆問題、夜間客服、即時訊息或多語言溝通。' },
           { v: '客房清潔與房務', d: '清潔人力安排、客房整理及房務交接。' },
-          { v: '其他營運問題', d: '請填寫其他影響日常營運的困難。', other: true, otherHint: '請填寫其他影響日常營運的困難' }
+          { v: '其他營運問題', d: '請填寫其他影響日常營運的困難。', other: true, deskOnly: true, otherHint: '請填寫其他影響日常營運的困難' }
         ] }
     ] },
   { name: '無人化入住', title: '無人化入住系統', note: '了解您目前的想法與規劃。',
@@ -494,7 +497,7 @@ function buildQuestion(q) {
   } else if (q.type === 'rank') {
     rankState[q.id] = [];
     el.append(h('div', { class: 'rank' }, q.options.map(o =>
-      h('button', { type: 'button', class: 'rk', 'data-rank': q.id, 'data-v': o.v, 'aria-pressed': 'false' },
+      h('button', { type: 'button', class: 'rk' + (o.deskOnly ? ' desk-only' : ''), 'data-rank': q.id, 'data-v': o.v, 'aria-pressed': 'false' },
         h('span', { class: 'badge', 'aria-hidden': 'true' }), h('span', { class: 'opt-text' }, optLabel(o))))));
   } else if (q.type === 'contact') {
     needsNext = true;
@@ -768,6 +771,33 @@ main.addEventListener('keydown', e => {
   }
 });
 
+function paintRank(qid, rk) {
+  const list = rankState[qid];
+  document.querySelectorAll(`[data-rank="${qid}"]`).forEach(b => {
+    const n = list.indexOf(b.dataset.v);
+    b.setAttribute('aria-pressed', n >= 0 ? 'true' : 'false');
+    b.querySelector('.badge').textContent = n >= 0 ? n + 1 : '';
+    b.setAttribute('aria-label', n >= 0 ? `${b.dataset.v}，第 ${n + 1} 名` : b.dataset.v);
+    if (G && n >= 0 && b === rk) G.fromTo(b.querySelector('.badge'), { scale: .4 }, { scale: 1, duration: .45, ease: 'back.out(3)' });
+  });
+}
+/* 手機版看不到「其他營運問題」,若視窗縮小時已選取,就取消它 */
+const phoneMQ = window.matchMedia('(max-width: 767px)');
+function dropDeskOnly() {
+  if (!phoneMQ.matches) return;
+  allQs.filter(q => q.type === 'rank').forEach(q => {
+    const hide = q.options.filter(o => o.deskOnly).map(o => o.v);
+    const list = rankState[q.id];
+    const kept = list.filter(v => !hide.includes(v));
+    if (kept.length !== list.length) {
+      rankState[q.id] = kept; paintRank(q.id);
+      const oi = $('other-' + q.id); if (oi) oi.value = '';
+      syncConditions(); updateProgress();
+    }
+  });
+}
+phoneMQ.addEventListener('change', dropDeskOnly);
+
 main.addEventListener('click', e => {
   const rk = e.target.closest('[data-rank]');
   if (rk) {
@@ -776,14 +806,11 @@ main.addEventListener('click', e => {
     if (i >= 0) list.splice(i, 1);
     else if (list.length < 3) list.push(v);
     else if (G) G.fromTo(rk, { x: -5 }, { x: 0, duration: .45, ease: 'elastic.out(1, .4)' });
-    document.querySelectorAll(`[data-rank="${qid}"]`).forEach(b => {
-      const n = list.indexOf(b.dataset.v);
-      b.setAttribute('aria-pressed', n >= 0 ? 'true' : 'false');
-      b.querySelector('.badge').textContent = n >= 0 ? n + 1 : '';
-      b.setAttribute('aria-label', n >= 0 ? `${b.dataset.v}，第 ${n + 1} 名` : b.dataset.v);
-      if (G && n >= 0 && b === rk) G.fromTo(b.querySelector('.badge'), { scale: .4 }, { scale: 1, duration: .45, ease: 'back.out(3)' });
-    });
+    paintRank(qid, rk);
     clearErr(byId[qid]); updateProgress();
+    syncConditions();
+    const oq = byId[qid];
+    if (otherOn(oq) && list[list.length - 1] === v) setTimeout(() => $('other-' + qid).focus({ preventScroll: true }), 50);
     return;
   }
   const nx = e.target.closest('[data-next]');
