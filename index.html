@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>旅宿營運現況調查</title>
+<meta name="theme-color" content="#fdf8e3">
+<meta name="color-scheme" content="only light">
+<meta name="description" content="共 6 題，約 2 分鐘。了解民宿與旅館業主的日常營運狀況。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf8e3;
+    --fg: #3b2a17;
+    --accent: #8a5a1c;
+    --glow: #eaa73a;
+    --err: #a8361f;
+    --soft: color-mix(in srgb, var(--fg) 72%, var(--bg));
+    --line: color-mix(in srgb, var(--fg) 28%, var(--bg));
+    --serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+    --sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    --hud-h: 60px;
+  }
+
+  /* Lenis 必要樣式 */
+  html.lenis, html.lenis body { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+  .lenis.lenis-stopped { overflow: hidden; }
+
+  :root { color-scheme: only light; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-padding-top: var(--hud-h); }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font-family: var(--sans); font-size: 17px; line-height: 1.75;
+    overflow-x: hidden;
+  }
+  [hidden] { display: none !important; }
+
+  /* ---------- 旅宿外觀(SVG) ---------- */
+  .house { display: block; overflow: visible; }
+  .house .ln {
+    fill: none; stroke: var(--fg); stroke-width: 2.2;
+    stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke;
+  }
+  .house .win {
+    fill: transparent; stroke: var(--fg); stroke-width: 1.8; vector-effect: non-scaling-stroke;
+    transition: fill .5s ease;
+  }
+  .house .win.lit { fill: var(--glow); }
+  .house .halo { fill: var(--glow); opacity: 0; }
+
+  /* ---------- 頂部列 ---------- */
+  .hud {
+    position: fixed; inset: 0 0 auto 0; z-index: 20; height: var(--hud-h);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 0 max(16px, env(safe-area-inset-left));
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-bottom: 1px solid transparent;
+    opacity: 0; transform: translateY(-8px); pointer-events: none;
+    transition: opacity .45s ease, transform .45s ease, border-color .45s ease;
+  }
+  .hud.on { opacity: 1; transform: none; pointer-events: auto; border-bottom-color: var(--line); }
+  .hud-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .hud [data-house] { display: block; width: 34px; flex: none; }
+  .hud .house { width: 34px; height: 31px; }
+  .hud-ch { font-family: var(--serif); font-weight: 700; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud-count { font-size: 14px; color: var(--soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ---------- 開場 ---------- */
+  .hero {
+    min-height: 100svh; max-width: 1040px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr; align-content: center; gap: 28px;
+    padding: 64px 24px 56px;
+  }
+  .hero-art { width: min(64vw, 260px); }
+  .hero h1 {
+    font-family: var(--serif); font-weight: 900;
+    font-size: clamp(40px, 10vw, 72px); line-height: 1.18; letter-spacing: .01em;
+    margin: 0 0 20px;
+  }
+  .hero p { color: var(--soft); max-width: 30em; margin: 0 0 6px; }
+  .hero .lead { color: var(--fg); font-size: 19px; }
+  .hero .actions { margin-top: 30px; align-items: center; }
+  .hero .eta { color: var(--soft); font-size: 15px; }
+  @media (min-width: 860px) {
+    .hero { grid-template-columns: 1.25fr 1fr; align-items: center; gap: 56px; }
+    .hero-art { order: 2; width: 100%; max-width: 380px; justify-self: end; }
+  }
+
+  /* ---------- 段落開頭 ---------- */
+  .ch-head {
+    min-height: 62svh; max-width: 760px; margin: 0 auto;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 72px 24px 8px;
+  }
+  .ch-step { margin: 0 0 14px; color: var(--accent); font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 10px; }
+  .ch-step .pips { display: inline-flex; gap: 5px; }
+  .ch-step .pip { width: 18px; height: 4px; border-radius: 2px; background: var(--line); }
+  .ch-step .pip.on { background: var(--accent); }
+  .ch-head h2 {
+    font-family: var(--serif); font-weight: 900;
+    font-size: clamp(32px, 7.4vw, 54px); line-height: 1.25; margin: 0 0 12px;
+  }
+  .ch-head h2 .mask { display: block; overflow: hidden; padding-bottom: .06em; }
+  .ch-head h2 .rv { display: block; }
+  .ch-head p { margin: 0; color: var(--soft); max-width: 30em; }
+
+  /* ---------- 題目 ---------- */
+  .q {
+    min-height: 86svh; max-width: 700px; margin: 0 auto;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 72px 24px;
+    opacity: .3; transition: opacity .5s ease;
+  }
+  .q.active, .q:focus-within, .no-io .q { opacity: 1; }
+  .q h3 {
+    font-family: var(--serif); font-weight: 700;
+    font-size: clamp(24px, 5.4vw, 33px); line-height: 1.45; margin: 0 0 6px; outline: none;
+  }
+  .q .hint { color: var(--soft); margin: 0; font-size: 15px; }
+  .opt-tag { font-family: var(--sans); font-weight: 400; font-size: 14px; color: var(--soft); margin-left: .5em; white-space: nowrap; }
+
+  .opts { display: grid; gap: 10px; margin-top: 22px; }
+  @media (min-width: 620px) { .opts.cols { grid-template-columns: 1fr 1fr; } }
+  .opt {
+    position: relative; display: flex; align-items: center; gap: 14px;
+    min-height: 58px; padding: 12px 20px;
+    border: 1.5px solid var(--line); border-radius: 14px;
+    background: color-mix(in srgb, #fff 45%, transparent);
+    cursor: pointer; line-height: 1.45;
+    transition: border-color .2s, background-color .2s;
+  }
+  .opt:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--bg)); }
+  .opt input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+  .mk {
+    flex: none; width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid var(--line); transition: background-color .2s, border-color .2s;
+  }
+  .opt.multi .mk { border-radius: 5px; }
+  .opt:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 11%, var(--bg)); }
+  .opt:has(input:checked) .mk { background: var(--glow); border-color: var(--accent); box-shadow: inset 0 0 0 3px var(--bg); }
+  .opt:has(input:focus-visible) { outline: 3px solid var(--fg); outline-offset: 3px; }
+
+  .other-wrap { margin-top: 4px; }
+
+  /* 選項說明 */
+  .opt-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; text-align: left; }
+  .opt-v { font-weight: 500; }
+  .opt-d { font-size: 14px; line-height: 1.55; color: var(--soft); }
+
+  /* 排序題 */
+  .rank { display: grid; gap: 10px; margin-top: 22px; }
+  .rk {
+    display: flex; align-items: center; gap: 14px; width: 100%;
+    min-height: 58px; padding: 12px 20px 12px 14px; border-radius: 14px;
+    border: 1.5px solid var(--line); background: color-mix(in srgb, #fff 45%, transparent); color: var(--fg);
+    font: inherit; line-height: 1.45; cursor: pointer; transition: border-color .2s, background-color .2s;
+  }
+  .rk .badge {
+    flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+    border: 1.5px dashed var(--line); font-family: var(--serif); font-weight: 700; font-size: 15px;
+  }
+  .rk[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 11%, var(--bg)); }
+  .rk[aria-pressed="true"] .badge { background: var(--accent); color: var(--bg); border: 0; }
+  .rk:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+
+  /* 文字欄位 */
+  .field { display: block; margin-top: 22px; }
+  .field > span { display: block; font-size: 15px; color: var(--soft); margin-bottom: 2px; }
+  .field input {
+    width: 100%; font: inherit; font-size: 20px; padding: 10px 2px;
+    border: 0; border-bottom: 1.5px solid var(--line); border-radius: 0;
+    background: transparent; color: var(--fg);
+  }
+  .field input::placeholder { color: color-mix(in srgb, var(--fg) 38%, var(--bg)); }
+  .field input:focus { outline: none; border-bottom: 2.5px solid var(--accent); padding-bottom: 9px; }
+  .sub-label { margin: 26px 0 0; font-size: 15px; color: var(--soft); }
+  .perk {
+    margin-top: 20px; padding: 16px 18px; border-radius: 14px;
+    background: color-mix(in srgb, var(--glow) 16%, var(--bg));
+    border: 1.5px solid color-mix(in srgb, var(--glow) 55%, var(--bg));
+  }
+  .perk p { margin: 0; font-size: 15px; line-height: 1.7; }
+  .perk .perk-t { font-family: var(--serif); font-weight: 700; font-size: 17px; margin-bottom: 4px; color: var(--accent); }
+  .sub-label + .opts { margin-top: 10px; }
+
+  /* 按鈕 */
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+  .btn {
+    font: inherit; font-weight: 700; min-height: 54px; padding: 0 30px;
+    border-radius: 999px; border: 1.5px solid var(--accent);
+    background: var(--accent); color: var(--bg); cursor: pointer;
+    transition: transform .15s ease, background-color .2s, opacity .2s;
+  }
+  .btn:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--accent) 85%, #000); }
+  .btn.ghost { background: transparent; color: var(--accent); }
+  .btn.ghost:hover { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+  .btn[disabled] { opacity: .55; cursor: progress; transform: none; }
+  .btn:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+
+  .err { margin: 12px 0 0; color: var(--err); font-weight: 500; font-size: 15px; }
+  .q.invalid .opt, .q.invalid .rk, .q.invalid .field input { border-color: var(--err); }
+  .opt .mk { align-self: center; }
+
+  /* 結尾、篩除 */
+  .scene {
+    min-height: 80svh; max-width: 700px; margin: 0 auto;
+    display: flex; flex-direction: column; justify-content: center; padding: 72px 24px;
+  }
+  .scene h2 { font-family: var(--serif); font-weight: 900; font-size: clamp(30px, 6.4vw, 46px); line-height: 1.3; margin: 0 0 12px; outline: none; }
+  .scene p { color: var(--soft); margin: 0 0 8px; max-width: 30em; }
+  .thanks .house { width: min(56vw, 220px); height: auto; margin-bottom: 28px; }
+
+  footer {
+    max-width: 700px; margin: 0 auto; padding: 32px 24px 56px;
+    font-size: 13px; line-height: 1.7; color: var(--soft);
+  }
+
+  @media (max-width: 480px) {
+    body { font-size: 16px; }
+    .q { padding: 64px 16px; }
+    .hero, .ch-head, .scene, footer { padding-left: 16px; padding-right: 16px; }
+    .hud-count { font-size: 13px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hud" id="hud" aria-hidden="true">
+  <div class="hud-left">
+    <span data-house="hud"></span>
+    <span class="hud-ch" id="hudCh">旅宿規模</span>
+  </div>
+  <span class="hud-count" id="hudCount"></span>
+</header>
+
+<main id="main">
+  <section class="hero" id="hero" aria-labelledby="heroTitle">
+    <div class="hero-art" data-house="hero"></div>
+    <div class="hero-text">
+      <h1 id="heroTitle">旅宿營運現況調查</h1>
+      <p class="lead">每完成一題，這間房子就多亮一扇窗。</p>
+      <p>我們是 SCAP 專案生，想了解民宿與旅館業主在日常營運中的實際狀況，包括人力配置、營運痛點與入住方式。</p>
+      <p>適用對象為客房數 15 間（含）以下的民宿與旅館業主。填答內容僅供研究使用，不會公開或轉售。</p>
+      <div class="actions">
+        <button type="button" class="btn" id="startBtn">開始</button>
+        <span class="eta">共 6 題，約 2 分鐘</span>
+      </div>
+    </div>
+  </section>
+  <div id="heroEnd" aria-hidden="true"></div>
+
+  <div id="ch0"></div>
+
+  <section class="scene" id="out" hidden aria-live="polite">
+    <h2 id="outTitle" tabindex="-1"></h2>
+    <p id="outBody"></p>
+    <div class="actions"><button type="button" class="btn ghost" id="outBack">回去改答案</button></div>
+  </section>
+
+  <div id="rest" hidden></div>
+
+  <section class="scene thanks" id="thanks" hidden aria-live="polite">
+    <div data-house="thanks"></div>
+    <h2 id="thanksTitle" tabindex="-1">感謝您的填答</h2>
+    <p id="thanksBody"></p>
+  </section>
+
+  <footer id="foot">只有按下「送出」，答案才會被記錄。聯絡資訊僅供研究團隊後續聯繫及訪談邀請使用。</footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+/* =========================================================
+   設定:收答案的方式,擇一填寫
+   A. Web3Forms:貼上 Access Key,每份答案會寄到你的信箱
+   B. Google Apps Script:貼上網頁應用程式網址,答案寫進試算表
+   ========================================================= */
+const WEB3FORMS_KEY = '';
+const ENDPOINT = '';
+
+/* =========================================================
+   題目與段落。key 是寄出時的欄位名稱,label 是畫面上的問法
+   ========================================================= */
+// 第 1 題選「16 間（含）以上」時是否直接結束問卷(true = 結束;false = 繼續填答)
+const SCREEN_OUT_LARGE = true;
+
+const CHAPTERS = [
+  { name: '旅宿規模', title: '先從旅宿的規模開始', note: '一個問題，確認這份問卷是否適合您。',
+    qs: [
+      { id: 'q1', key: '1. 客房數', type: 'single', label: '請問貴旅宿目前共有幾間客房？',
+        hint: '請以目前實際提供旅客住宿的客房數計算。',
+        options: [ { v: '15 間（含）以下' }, { v: '16 間（含）以上', end: 'size' } ] }
+    ] },
+  { name: '經營方式', title: '旅宿的經營方式', note: '住宿型態，以及平時由誰負責現場。',
+    qs: [
+      { id: 'q2', key: '2. 住宿模式', type: 'multi', label: '請問貴旅宿目前提供哪些住宿模式？',
+        hint: '可複選，請依實際經營情況填答。',
+        options: [
+          { v: '整棟包棟', d: '以整棟旅宿為單位出租，供同一組旅客獨立使用。' },
+          { v: '單間客房出租', d: '以單間客房為單位接受訂房，可同時接待不同組旅客。' }
+        ] },
+      { id: 'q3', key: '3. 現場人力配置', type: 'multi', label: '請問貴旅宿平時主要由哪些人員負責現場接待與管理？',
+        hint: '可複選，請依實際營運情況填答。',
+        options: [
+          { v: '業主本人', d: '由經營者親自負責現場接待及管理。' },
+          { v: '家人或親友', d: '由家人或親友協助現場營運。' },
+          { v: '正職或兼職員工', d: '由聘用人員負責現場接待與日常管理。' },
+          { v: '委外管理人員', d: '由代管業者或外部人員協助管理。' },
+          { v: '無固定現場人員', d: '主要透過遠端管理或自助入住方式營運。' },
+          { v: '其他', d: '請填寫其他現場管理方式。', other: true, otherHint: '請填寫其他現場管理方式' }
+        ] }
+    ] },
+  { name: '營運痛點', title: '日常營運的困難', note: '依困擾程度排序，最多選 3 項。',
+    qs: [
+      { id: 'q4', key: '4. 營運痛點排序', type: 'rank', label: '請問目前貴旅宿在日常營運中，最常面臨哪些困難？',
+        hint: '請依困擾程度，依序選出最多 3 項。第一個選取的項目為第 1 優先，第二個為第 2 優先，第三個為第 3 優先；再次點選可取消。',
+        options: [
+          { v: '人力安排與管理', d: '人手不足、排班困難或需長時間親自駐點。' },
+          { v: '訂房與入住管理', d: '訂單整合、入住確認、交付鑰匙或退房流程繁瑣。' },
+          { v: '訂房平台經營與曝光', d: 'OTA 平台管理、曝光不足、平台抽成或訂房轉換率問題。' },
+          { v: '旅客諮詢與客服', d: '重複回覆問題、夜間客服、即時訊息或多語言溝通。' },
+          { v: '客房清潔與房務', d: '清潔人力安排、客房整理及房務交接。' },
+          { v: '其他營運問題', d: '請填寫其他影響日常營運的困難。', other: true, otherHint: '請填寫其他影響日常營運的困難' }
+        ] }
+    ] },
+  { name: '無人化入住', title: '無人化入住系統', note: '了解您目前的想法與規劃。',
+    qs: [
+      { id: 'q5', key: '5. 無人化入住導入意願', type: 'single', label: '請問貴旅宿目前對導入無人化入住系統的意願為何？',
+        hint: '無人化入住系統是指透過電子門鎖、自助入住設備或線上入住流程等方式，減少現場人工接待需求。',
+        options: [
+          { v: '已導入使用', d: '目前已使用無人化或自助入住系統。' },
+          { v: '有興趣導入', d: '尚未導入，但有意願進一步了解或嘗試。' },
+          { v: '尚在評估', d: '正在評估需求、成本或實際可行性。' },
+          { v: '暫無導入意願', d: '目前沒有相關需求或導入計畫。' }
+        ] }
+    ] },
+  { name: '聯絡資訊', title: '最後，留下聯絡方式', note: '以下資訊僅供研究團隊後續聯繫及訪談邀請使用。',
+    qs: [
+      { id: 'contact', type: 'contact', label: '請問我們可以透過什麼方式與您聯繫？',
+        hint: '以下資訊僅供研究團隊後續聯繫及訪談邀請使用。' },
+      { id: 'agree', type: 'consent', label: '確認資料使用方式' }
+    ] }
+];
+
+// 第 6 題裡的複選欄位
+const SUB_OPTS = {
+  'c-time': { id: 'c-time', type: 'multi', cols: true, options: [
+    { v: '平日白天（09:00–17:00）' }, { v: '平日晚上（18:30–21:00）' },
+    { v: '週末白天（09:00–17:00）' }, { v: '週末晚上（18:30–21:00）' },
+    { v: '時間彈性，皆可聯繫', exclusive: true } ] },
+  'c-way': { id: 'c-way', type: 'multi', options: [
+    { v: '電話通話' }, { v: 'LINE 語音通話' }, { v: '線上視訊會議（如 Google Meet 等）' } ] }
+};
+
+const END_COPY = {
+  size: { title: '本問卷以 15 間客房（含）以下的旅宿為對象',
+          body: '感謝您撥冗填答。本次研究聚焦於客房數 15 間（含）以下的旅宿，因此不需要繼續填寫。若剛才選錯，可以回到上一題修改。' }
+};
+
+/* =========================================================
+   環境
+   ========================================================= */
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const G = !reduce && window.gsap ? window.gsap : null;
+const ST = G && window.ScrollTrigger ? window.ScrollTrigger : null;
+if (ST) G.registerPlugin(ST);
+
+let lenis = null;
+if (!reduce && window.Lenis) {
+  lenis = new Lenis({ lerp: 0.09, smoothWheel: true });
+  if (G) {
+    if (ST) lenis.on('scroll', ST.update);
+    G.ticker.add(t => lenis.raf(t * 1000));
+    G.ticker.lagSmoothing(0);
+  } else {
+    const loop = t => { lenis.raf(t); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  }
+}
+
+/* =========================================================
+   小工具
+   ========================================================= */
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const k in (attrs || {})) {
+    const v = attrs[k];
+    if (v === false || v === null || v === undefined) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'hidden') e.hidden = true;
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  kids.flat().forEach(c => { if (c !== null && c !== undefined && c !== '') e.append(c.nodeType ? c : document.createTextNode(c)); });
+  return e;
+}
+const $ = id => document.getElementById(id);
+
+/* 旅宿外觀:12 扇窗,從一樓亮到三樓 */
+const WIN_X = [52, 86, 132, 166];
+const WIN_ROWS = [158, 122, 86];          // 一樓、二樓、三樓
+function houseSVG() {
+  const NS = 'http://www.w3.org/2000/svg';
+  const s = document.createElementNS(NS, 'svg');
+  s.setAttribute('viewBox', '0 0 240 222');
+  s.setAttribute('class', 'house');
+  s.setAttribute('aria-hidden', 'true');
+  const add = (tag, a) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); s.append(e); return e; };
+  add('path', { class: 'ln', d: 'M168 45 V26 H188 V57' });            // 煙囪
+  add('path', { class: 'ln', d: 'M16 80 L120 14 L224 80' });          // 屋頂
+  add('path', { class: 'ln', d: 'M34 70 V206 H206 V70' });            // 牆
+  add('path', { class: 'ln', d: 'M8 206 H232' });                     // 地面
+  add('path', { class: 'ln', d: 'M110 206 V172 Q120 162 130 172 V206' }); // 門
+  WIN_ROWS.forEach(y => WIN_X.forEach(x => {
+    if (y === WIN_ROWS[0]) {
+      // 一樓的窗讓出中間的門,左右各兩扇對稱排列
+      const nx = { 52: 46, 86: 78, 132: 140, 166: 172 }[x];
+      add('rect', { class: 'halo', x: nx - 6, y: y - 6, width: 34, height: 36, rx: 8 });
+      add('rect', { class: 'win', x: nx, y, width: 22, height: 24, rx: 2 });
+      return;
+    }
+    add('rect', { class: 'halo', x: x - 6, y: y - 6, width: 34, height: 36, rx: 8 });
+    add('rect', { class: 'win', x, y, width: 22, height: 24, rx: 2 });
+  }));
+  return s;
+}
+document.querySelectorAll('[data-house]').forEach(slot => slot.append(houseSVG()));
+const WIN_TOTAL = 12;
+
+const allQs = [];
+const byId = {};
+const rankState = {};
+CHAPTERS.forEach((c, ci) => c.qs.forEach(q => {
+  q.ch = ci;
+  if (q.required === undefined) q.required = true;
+  allQs.push(q); byId[q.id] = q;
+}));
+
+/* =========================================================
+   建立畫面
+   ========================================================= */
+function optLabel(o) {
+  return [h('span', { class: 'opt-v' }, o.v), o.d ? h('span', { class: 'opt-d' }, o.d) : ''];
+}
+function buildOptions(q) {
+  const box = h('div', { class: 'opts' + (q.cols ? ' cols' : '') });
+  q.options.forEach((o, i) => {
+    const id = `${q.id}-${i}`;
+    box.append(h('label', { class: 'opt' + (q.type === 'multi' ? ' multi' : ''), for: id },
+      h('input', { type: q.type === 'single' ? 'radio' : 'checkbox', name: q.id, id, value: o.v }),
+      h('span', { class: 'mk', 'aria-hidden': 'true' }),
+      h('span', { class: 'opt-text' }, optLabel(o))));
+  });
+  return box;
+}
+
+function buildQuestion(q) {
+  const hid = 'h-' + q.id;
+  const el = h('div', { class: 'q stop', id: 'q-' + q.id, role: 'group', 'aria-labelledby': hid, 'data-q': q.id });
+  el.append(h('h3', { id: hid, tabindex: '-1' }, q.label, q.required === false ? h('span', { class: 'opt-tag' }, '選填') : ''));
+  if (q.hint) el.append(h('p', { class: 'hint' }, q.hint));
+
+  const otherOpt = (q.options || []).find(o => o && o.other);
+  let needsNext = q.type === 'multi' || q.type === 'rank' || !!otherOpt;
+
+  if (q.type === 'single' || q.type === 'multi') {
+    el.append(buildOptions(q));
+  } else if (q.type === 'rank') {
+    rankState[q.id] = [];
+    el.append(h('div', { class: 'rank' }, q.options.map(o =>
+      h('button', { type: 'button', class: 'rk', 'data-rank': q.id, 'data-v': o.v, 'aria-pressed': 'false' },
+        h('span', { class: 'badge', 'aria-hidden': 'true' }), h('span', { class: 'opt-text' }, optLabel(o))))));
+  } else if (q.type === 'contact') {
+    needsNext = true;
+    el.append(
+      h('aside', { class: 'perk', 'aria-label': '訪談感謝回饋' },
+        h('p', { class: 'perk-t' }, '訪談感謝回饋'),
+        h('p', {}, '為感謝願意接受訪談的業主，完成訪談後，我們也將協助在大學生相關社群分享及介紹您的旅宿，增加旅宿被年輕族群認識的機會！宣傳內容會事先與您確認，經同意後才會發布。')),
+      h('label', { class: 'field' }, h('span', {}, '旅宿名稱（選填）'),
+        h('input', { type: 'text', id: 'c-inn', autocomplete: 'organization', placeholder: '請輸入旅宿名稱' })),
+      h('label', { class: 'field' }, h('span', {}, '聯絡方式（電子郵件）'),
+        h('input', { type: 'email', id: 'c-email', autocomplete: 'email', inputmode: 'email', placeholder: 'name@example.com' })),
+      h('label', { class: 'field' }, h('span', {}, '方便稱呼您的方式（選填）'),
+        h('input', { type: 'text', id: 'c-name', autocomplete: 'name', placeholder: '例如：王先生、陳小姐' })),
+      h('p', { class: 'sub-label' }, '方便聯繫的時段（選填，可複選）'),
+      buildOptions(SUB_OPTS['c-time']),
+      h('p', { class: 'sub-label' }, '偏好的訪談方式（選填，可複選）'),
+      buildOptions(SUB_OPTS['c-way'])
+    );
+  } else if (q.type === 'consent') {
+    el.append(
+      h('p', { class: 'hint' }, '填答內容僅供本次研究使用，不會公開或轉售；聯絡資訊僅用於後續聯繫及訪談邀請。'),
+      h('div', { class: 'opts' }, h('label', { class: 'opt multi', for: 'consent' },
+        h('input', { type: 'checkbox', id: 'consent' }), h('span', { class: 'mk', 'aria-hidden': 'true' }),
+        h('span', { class: 'opt-text' }, h('span', { class: 'opt-v' }, '我已了解並同意上述資料使用方式')))));
+    el.append(h('p', { class: 'err', id: 'err-' + q.id, hidden: true, role: 'alert' }));
+    el.append(h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', id: 'submitBtn' }, '送出')));
+    return el;
+  }
+
+  if (otherOpt) {
+    el.append(h('label', { class: 'field other-wrap', id: 'otherWrap-' + q.id, hidden: true },
+      h('span', {}, '「' + otherOpt.v + '」的內容'),
+      h('input', { type: 'text', id: 'other-' + q.id, autocomplete: 'off', placeholder: otherOpt.otherHint || '請簡要說明' })));
+  }
+  el.append(h('p', { class: 'err', id: 'err-' + q.id, hidden: true, role: 'alert' }));
+  if (needsNext) {
+    el.append(h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn ghost', 'data-next': q.id }, '下一題')));
+  }
+  return el;
+}
+
+function buildChapter(c, ci) {
+  const pips = h('span', { class: 'pips', 'aria-hidden': 'true' },
+    CHAPTERS.map((_, i) => h('span', { class: 'pip' + (i <= ci ? ' on' : '') })));
+  return h('section', { class: 'chapter', id: 'chapter-' + ci, 'data-ch': ci, 'aria-labelledby': 'cht-' + ci },
+    h('div', { class: 'ch-head' },
+      h('p', { class: 'ch-step' }, pips, `${c.name}（第 ${ci + 1} 部分，共 ${CHAPTERS.length} 部分）`),
+      h('h2', { id: 'cht-' + ci }, h('span', { class: 'mask' }, h('span', { class: 'rv' }, c.title))),
+      h('p', {}, c.note)),
+    c.qs.map(buildQuestion));
+}
+
+$('ch0').replaceWith(buildChapter(CHAPTERS[0], 0));
+const rest = $('rest');
+CHAPTERS.slice(1).forEach((c, i) => rest.append(buildChapter(c, i + 1)));
+
+/* =========================================================
+   讀取答案
+   ========================================================= */
+function checked(name) { return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(i => i.value); }
+function raw(q) {
+  switch (q.type) {
+    case 'single': return checked(q.id)[0] || '';
+    case 'multi': return checked(q.id);
+    case 'rank': return rankState[q.id].slice();
+    case 'contact': return { inn: $('c-inn').value.trim(), email: $('c-email').value.trim(), name: $('c-name').value.trim(), time: checked('c-time'), way: checked('c-way') };
+    case 'consent': return $('consent').checked;
+  }
+}
+function answers() { const a = {}; allQs.forEach(q => { a[q.id] = raw(q); }); return a; }
+function isShown(q) { return !q.showIf || !!q.showIf(answers()); }
+function otherOn(q) {
+  const o = (q.options || []).find(x => x && x.other);
+  if (!o) return false;
+  const r = raw(q);
+  return Array.isArray(r) ? r.includes(o.v) : r === o.v;
+}
+function otherText(q) { const e = $('other-' + q.id); return e ? e.value.trim() : ''; }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function problem(q) {
+  if (!isShown(q)) return '';
+  const r = raw(q);
+  if (q.required) {
+    if (q.type === 'single' && !r) return '請選擇一個選項。';
+    if (q.type === 'multi' && !r.length) return '請至少選擇一項。';
+    if (q.type === 'rank' && !r.length) return '請至少選出 1 項。';
+    if (q.type === 'contact' && !r.email) return '請填寫電子郵件，以便後續聯繫。';
+    if (q.type === 'consent' && !r) return '請勾選同意後再送出。';
+  }
+  if (q.type === 'contact' && r.email && !EMAIL_RE.test(r.email)) return '電子郵件格式似乎不正確，請再確認。';
+  if (otherOn(q) && !otherText(q)) return '請填寫「其他」的內容。';
+  return '';
+}
+
+/* =========================================================
+   捲動與導覽
+   ========================================================= */
+function refreshLayout() {
+  requestAnimationFrame(() => {
+    if (lenis) lenis.resize();
+    if (ST) ST.refresh();
+  });
+}
+function visible(el) { return !el.closest('[hidden]'); }
+function scrollToEl(el, then) {
+  const offset = -Math.round(window.innerHeight * 0.04);
+  if (lenis) {
+    lenis.scrollTo(el, { offset, duration: 1.15, onComplete: then });
+  } else {
+    const top = el.getBoundingClientRect().top + window.scrollY + offset;
+    window.scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' });
+    if (then) setTimeout(then, reduce ? 0 : 600);
+  }
+}
+function focusIn(el) {
+  const f = el.querySelector('h3, h2');
+  if (f) f.focus({ preventScroll: true });
+}
+function goNext(fromEl) {
+  const stops = [...document.querySelectorAll('.stop')].filter(visible);
+  const next = stops[stops.indexOf(fromEl) + 1];
+  if (next) scrollToEl(next, () => focusIn(next));
+}
+let advanceTimer = 0;
+function advanceSoon(el) {
+  clearTimeout(advanceTimer);
+  advanceTimer = setTimeout(() => goNext(el), 430);
+}
+
+function syncConditions() {
+  let changed = false;
+  allQs.forEach(q => {
+    const el = $('q-' + q.id);
+    const show = isShown(q);
+    if (el.hidden === show) { el.hidden = !show; changed = true; }
+    const ow = $('otherWrap-' + q.id);
+    if (ow) {
+      const on = otherOn(q);
+      if (ow.hidden === on) { ow.hidden = !on; changed = true; }
+    }
+  });
+  if (changed) refreshLayout();
+}
+
+/* 第 1 題的資格判斷 */
+function screenOut() {
+  if (!SCREEN_OUT_LARGE) return '';
+  const q = byId.q1, v = raw(q);
+  const o = q.options.find(x => x.v === v);
+  return o && o.end ? o.end : '';
+}
+function evalGate(fromEl) {
+  const why = screenOut();
+  const out = $('out');
+  if (why) {
+    $('outTitle').textContent = END_COPY[why].title;
+    $('outBody').textContent = END_COPY[why].body;
+    out.hidden = false; rest.hidden = true;
+    refreshLayout();
+    recordScreenOut(why);
+    clearTimeout(advanceTimer);
+    advanceTimer = setTimeout(() => scrollToEl(out, () => $('outTitle').focus({ preventScroll: true })), 380);
+    return;
+  }
+  out.hidden = true;
+  if (raw(byId.q1) && rest.hidden) { rest.hidden = false; refreshLayout(); }
+  advanceSoon(fromEl);
+}
+
+/* =========================================================
+   進度:亮窗
+   ========================================================= */
+let litCount = 0;
+function lightWindows(n) {
+  if (n === litCount) return;
+  const up = n > litCount;
+  litCount = n;
+  document.querySelectorAll('svg.house').forEach(svg => {
+    const wins = svg.querySelectorAll('.win');
+    const halos = svg.querySelectorAll('.halo');
+    wins.forEach((w, i) => {
+      const on = i < n;
+      if (w.classList.contains('lit') === on) return;
+      w.classList.toggle('lit', on);
+      if (G && on && up && svg.getBoundingClientRect().width > 0) {
+        G.fromTo(halos[i], { opacity: .55, scale: .6, transformOrigin: '50% 50%' },
+          { opacity: 0, scale: 1.25, duration: 1.1, ease: 'power2.out' });
+      }
+    });
+  });
+}
+function updateProgress() {
+  const req = allQs.filter(q => q.required && q.type !== 'consent' && isShown(q));
+  const done = req.filter(q => {
+    const r = raw(q);
+    const has = Array.isArray(r) ? r.length > 0 : q.type === 'contact' ? !!r.email : !!r;
+    return has && !problem(q);
+  }).length;
+  $('hudCount').textContent = `已答 ${done} / ${req.length}`;
+  lightWindows(req.length ? Math.round(done / req.length * WIN_TOTAL) : 0);
+}
+
+/* =========================================================
+   錯誤提示
+   ========================================================= */
+function showErr(q, msg) {
+  const el = $('q-' + q.id); const e = $('err-' + q.id);
+  el.classList.add('invalid'); e.textContent = msg; e.hidden = false;
+  if (G) G.fromTo(e, { x: -6 }, { x: 0, duration: .5, ease: 'elastic.out(1, .4)' });
+}
+function clearErr(q) {
+  if (!q) return;
+  const el = $('q-' + q.id); const e = $('err-' + q.id);
+  if (el) el.classList.remove('invalid');
+  if (e) e.hidden = true;
+}
+function qOf(node) { const el = node.closest('.q'); return el ? byId[el.dataset.q] : null; }
+
+/* =========================================================
+   互動
+   ========================================================= */
+const main = $('main');
+
+main.addEventListener('change', e => {
+  const t = e.target;
+  const q = qOf(t);
+  if (t.type === 'checkbox' && t.name && (byId[t.name] || SUB_OPTS[t.name])) {
+    const qq = byId[t.name] || SUB_OPTS[t.name];
+    const isEx = v => { const o = qq.options.find(x => x.v === v); return o && o.exclusive; };
+    document.querySelectorAll(`input[name="${t.name}"]`).forEach(i => {
+      if (i === t || !t.checked) return;
+      if (isEx(t.value) || isEx(i.value)) i.checked = false;
+    });
+  }
+  if (G && t.checked && t.closest('.opt')) {
+    G.fromTo(t.closest('.opt').querySelector('.mk'), { scale: .55 }, { scale: 1, duration: .45, ease: 'back.out(3)' });
+  }
+  syncConditions();
+  clearErr(q);
+  updateProgress();
+
+  if (t.type === 'radio' && q) {
+    const el = $('q-' + q.id);
+    if (q.ch === 0) { evalGate(el); return; }
+    if (otherOn(q)) { setTimeout(() => $('other-' + q.id).focus({ preventScroll: true }), 50); return; }
+    advanceSoon(el);
+  }
+});
+
+main.addEventListener('input', e => {
+  const q = qOf(e.target);
+  if ((e.target.type === 'text' || e.target.type === 'email') && q) { clearErr(q); updateProgress(); }
+});
+
+main.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.target.type === 'text' || e.target.type === 'email')) {
+    e.preventDefault();
+    const el = e.target.closest('.q');
+    const nx = el && el.querySelector('[data-next]');
+    if (nx) nx.click();
+  }
+});
+
+main.addEventListener('click', e => {
+  const rk = e.target.closest('[data-rank]');
+  if (rk) {
+    const qid = rk.dataset.rank, v = rk.dataset.v, list = rankState[qid];
+    const i = list.indexOf(v);
+    if (i >= 0) list.splice(i, 1);
+    else if (list.length < 3) list.push(v);
+    else if (G) G.fromTo(rk, { x: -5 }, { x: 0, duration: .45, ease: 'elastic.out(1, .4)' });
+    document.querySelectorAll(`[data-rank="${qid}"]`).forEach(b => {
+      const n = list.indexOf(b.dataset.v);
+      b.setAttribute('aria-pressed', n >= 0 ? 'true' : 'false');
+      b.querySelector('.badge').textContent = n >= 0 ? n + 1 : '';
+      b.setAttribute('aria-label', n >= 0 ? `${b.dataset.v}，第 ${n + 1} 名` : b.dataset.v);
+      if (G && n >= 0 && b === rk) G.fromTo(b.querySelector('.badge'), { scale: .4 }, { scale: 1, duration: .45, ease: 'back.out(3)' });
+    });
+    clearErr(byId[qid]); updateProgress();
+    return;
+  }
+  const nx = e.target.closest('[data-next]');
+  if (nx) {
+    const q = byId[nx.dataset.next];
+    const msg = problem(q);
+    if (msg) { showErr(q, msg); return; }
+    goNext($('q-' + q.id));
+    return;
+  }
+  if (e.target.closest('#submitBtn')) submit(e.target.closest('#submitBtn'));
+});
+
+$('startBtn').addEventListener('click', () => { const f = $('q-q1'); scrollToEl(f, () => focusIn(f)); });
+$('outBack').addEventListener('click', () => { const f = $('q-q1'); scrollToEl(f, () => focusIn(f)); });
+
+/* =========================================================
+   送出
+   ========================================================= */
+function buildPayload() {
+  const row = {};
+  allQs.forEach(q => {
+    if (!isShown(q)) return;
+    const r = raw(q);
+    if (q.type === 'contact') {
+      row['旅宿名稱'] = r.inn; row['電子郵件'] = r.email; row['稱呼'] = r.name;
+      row['方便聯繫時段'] = r.time.join('、');
+      row['偏好訪談方式'] = r.way.join('、');
+      return;
+    }
+    if (q.type === 'consent') { row['同意資料使用'] = r ? '是' : '否'; return; }
+    // 「其他」直接帶入填寫內容,例如「其他：鄰居協助」
+    const o = (q.options || []).find(x => x && x.other);
+    const fix = x => (o && x === o.v && otherText(q)) ? `${x}：${otherText(q)}` : x;
+    const list = (Array.isArray(r) ? r : [r]).map(fix);
+    row[q.key] = q.type === 'rank' ? list.map((x, i) => `${i + 1}:${x}`).join(' / ') : list.join('、');
+  });
+  return { kind: 'complete', submittedAt: new Date().toISOString(), row };
+}
+
+async function post(payload) {
+  if (WEB3FORMS_KEY) {
+    // 篩除紀錄不寄信,避免佔用額度
+    if (payload.kind !== 'complete') return 'skipped';
+    const body = Object.assign({
+      access_key: WEB3FORMS_KEY,
+      subject: '旅宿問卷新回覆',
+      from_name: '旅宿問卷',
+      botcheck: ''
+    }, payload.row);
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.success === false) throw new Error(data.message || 'submit failed');
+    return 'sent';
+  }
+  if (ENDPOINT) {
+    await fetch(ENDPOINT, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    return 'sent';
+  }
+  console.info('[survey] 尚未設定收件方式,答案未送出:', payload);
+  return 'none';
+}
+
+const sentScreenOuts = new Set();
+function recordScreenOut(why) {
+  if (sentScreenOuts.has(why)) return;
+  sentScreenOuts.add(why);
+  post({ kind: 'screened_out', submittedAt: new Date().toISOString(), row: { '分類': '篩除：客房數 16 間以上' } }).catch(() => {});
+}
+
+async function submit(btn) {
+  const bad = allQs.find(q => problem(q));
+  if (bad) {
+    allQs.forEach(q => { const m = problem(q); if (m) showErr(q, m); });
+    const el = $('q-' + bad.id);
+    scrollToEl(el, () => focusIn(el));
+    return;
+  }
+  const payload = buildPayload();
+  btn.disabled = true; btn.textContent = '送出中…';
+  try { await post(payload); }
+  catch (err) {
+    btn.disabled = false; btn.textContent = '送出';
+    showErr(byId.agree, '送出失敗，可能是網路不穩定。請確認連線後再按一次「送出」。');
+    return;
+  }
+  showThanks(payload);
+}
+
+function showThanks(payload) {
+  $('thanksBody').textContent = '您的回覆已送出。若適合進一步訪談，研究團隊會透過您留下的電子郵件與您聯繫。';
+  ['hero', 'chapter-0', 'rest', 'out', 'heroEnd'].forEach(id => { $(id).hidden = true; });
+  applyChapter(CHAPTERS.length - 1);
+  $('thanks').hidden = false;
+  $('hud').classList.remove('on');
+  if (lenis) lenis.scrollTo(0, { immediate: true }); else window.scrollTo(0, 0);
+  refreshLayout();
+  $('thanksTitle').focus({ preventScroll: true });
+  const wins = $('thanks').querySelectorAll('.win');
+  wins.forEach(w => w.classList.remove('lit'));
+  if (G) {
+    G.from('#thanks > *', { y: 24, opacity: 0, stagger: .1, duration: .9, ease: 'power3.out' });
+    wins.forEach((w, i) => G.delayedCall(.5 + i * .09, () => w.classList.add('lit')));
+  } else {
+    wins.forEach(w => w.classList.add('lit'));
+  }
+}
+
+/* 頂部列顯示目前所在的部分 */
+function applyChapter(ci) { $('hudCh').textContent = CHAPTERS[ci].name; }
+
+/* =========================================================
+   觀察捲動位置
+   ========================================================= */
+if ('IntersectionObserver' in window) {
+  const chIO = new IntersectionObserver(ents => {
+    ents.forEach(en => { if (en.isIntersecting) applyChapter(+en.target.dataset.ch); });
+  }, { rootMargin: '-50% 0px -50% 0px' });
+  document.querySelectorAll('.chapter').forEach(s => chIO.observe(s));
+  $('hero').dataset.ch = 0;
+  chIO.observe($('hero'));
+
+  const qIO = new IntersectionObserver(ents => {
+    ents.forEach(en => { en.target.classList.toggle('active', en.isIntersecting); });
+  }, { rootMargin: '-38% 0px -38% 0px' });
+  document.querySelectorAll('.q').forEach(q => qIO.observe(q));
+
+  const hudIO = new IntersectionObserver(ents => {
+    ents.forEach(en => { $('hud').classList.toggle('on', !en.isIntersecting && en.boundingClientRect.top < 0); });
+  });
+  hudIO.observe($('heroEnd'));
+
+  // 段落標題:進場時從遮罩下滑上來
+  if (G) {
+    const rvs = document.querySelectorAll('.ch-head .rv');
+    G.set(rvs, { yPercent: 105 });
+    const headIO = new IntersectionObserver(ents => {
+      ents.forEach(en => {
+        if (!en.isIntersecting) return;
+        G.to(en.target.querySelector('.rv'), { yPercent: 0, duration: 1, ease: 'power4.out' });
+        headIO.unobserve(en.target);
+      });
+    }, { rootMargin: '0px 0px -20% 0px' });
+    document.querySelectorAll('.ch-head').forEach(c => headIO.observe(c));
+  }
+} else {
+  document.body.classList.add('no-io');
+  $('hud').classList.add('on');
+}
+
+/* =========================================================
+   開場動畫:先畫出房子的線條,再亮起一扇窗
+   ========================================================= */
+if (G) {
+  const heroSvg = document.querySelector('#hero svg.house');
+  const lines = heroSvg.querySelectorAll('.ln, .win');
+  lines.forEach(p => {
+    const len = p.getTotalLength ? p.getTotalLength() : 200;
+    p.style.strokeDasharray = len;
+    p.style.strokeDashoffset = len;
+  });
+  const tl = G.timeline({ defaults: { ease: 'power3.out' } });
+  tl.to(heroSvg.querySelectorAll('.ln'), { strokeDashoffset: 0, duration: 1.3, stagger: .12, ease: 'power2.inOut' })
+    .to(heroSvg.querySelectorAll('.win'), { strokeDashoffset: 0, duration: .6, stagger: .04 }, '-=.6')
+    .from('.hero h1', { y: 30, opacity: 0, duration: 1 }, .3)
+    .from('.hero-text p, .hero-text .actions', { y: 18, opacity: 0, stagger: .08, duration: .9 }, .55)
+    .add(() => {
+      const w = heroSvg.querySelectorAll('.win')[9];
+      w.classList.add('lit');
+      G.fromTo(heroSvg.querySelectorAll('.halo')[9], { opacity: .55, scale: .6, transformOrigin: '50% 50%' }, { opacity: 0, scale: 1.3, duration: 1.2 });
+      G.delayedCall(1.4, () => { if (litCount < 10) w.classList.remove('lit'); });
+    })
+    .eventCallback('onComplete', () => lines.forEach(p => { p.style.strokeDasharray = ''; p.style.strokeDashoffset = ''; }));
+
+  if (ST) {
+    G.to('.hero-art', {
+      yPercent: -18, ease: 'none',
+      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
+    });
+  }
+}
+
+updateProgress();
+</script>
+</body>
+</html>
