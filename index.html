@@ -294,7 +294,7 @@
    A. Web3Forms:貼上 Access Key,每份答案會寄到你的信箱
    B. Google Apps Script:貼上網頁應用程式網址,答案寫進試算表
    ========================================================= */
-const WEB3FORMS_KEY = 'bd7ea854-f843-414f-ae4c-18efe23d62cc';
+const WEB3FORMS_KEY = '';
 const ENDPOINT = '';
 
 /* =========================================================
@@ -324,8 +324,6 @@ const CHAPTERS = [
           { v: '業主本人', d: '由經營者親自負責現場接待及管理。' },
           { v: '家人或親友', d: '由家人或親友協助現場營運。' },
           { v: '正職或兼職員工', d: '由聘用人員負責現場接待與日常管理。' },
-          { v: '委外管理人員', d: '由代管業者或外部人員協助管理。' },
-          { v: '無固定現場人員', d: '主要透過遠端管理或自助入住方式營運。' },
           { v: '其他', d: '請填寫其他現場管理方式。', other: true, otherHint: '請填寫其他現場管理方式' }
         ] }
     ] },
@@ -360,6 +358,9 @@ const CHAPTERS = [
       { id: 'contact', type: 'contact', showIf: a => !!a.interview && a.interview !== '不願意',
         label: '請問我們可以透過什麼方式與您聯繫？',
         hint: '以下資訊僅供研究團隊後續聯繫及訪談邀請使用。' },
+      { id: 'schedule', type: 'schedule', required: false, showIf: a => !!a.interview && a.interview !== '不願意',
+        label: '請問方便與您聯繫的時段與訪談方式？',
+        hint: '兩項皆為選填，可複選。' },
       { id: 'agree', type: 'consent', label: '確認資料使用方式' }
     ] }
 ];
@@ -508,10 +509,14 @@ function buildQuestion(q) {
       h('label', { class: 'field tight' }, h('span', {}, 'Instagram 帳號'),
         h('input', { type: 'text', id: 'c-ig', autocomplete: 'off', autocapitalize: 'off', placeholder: '例如：@your_inn' })),
       h('label', { class: 'field' }, h('span', {}, '方便稱呼您的方式（選填）'),
-        h('input', { type: 'text', id: 'c-name', autocomplete: 'name', placeholder: '例如：王先生、陳小姐' })),
-      h('p', { class: 'sub-label' }, '方便聯繫的時段（選填，可複選）'),
+        h('input', { type: 'text', id: 'c-name', autocomplete: 'name', placeholder: '例如：王先生、陳小姐' }))
+    );
+  } else if (q.type === 'schedule') {
+    needsNext = true;
+    el.append(
+      h('p', { class: 'sub-label' }, '方便聯繫的時段'),
       buildOptions(SUB_OPTS['c-time']),
-      h('p', { class: 'sub-label' }, '偏好的訪談方式（選填，可複選）'),
+      h('p', { class: 'sub-label' }, '偏好的訪談方式'),
       h('p', { class: 'sub-note' }, '不熟悉這些軟體也沒關係。確認訪談時間後，我們會把會議連結傳給您，到時點選連結、依畫面指示加入即可；也可以先不選，我們再與您討論。'),
       buildOptions(SUB_OPTS['c-way'])
     );
@@ -562,7 +567,8 @@ function raw(q) {
     case 'single': return checked(q.id)[0] || '';
     case 'multi': return checked(q.id);
     case 'rank': return rankState[q.id].slice();
-    case 'contact': return { inn: $('c-inn').value.trim(), email: $('c-email').value.trim(), line: $('c-line').value.trim(), ig: $('c-ig').value.trim(), name: $('c-name').value.trim(), time: checked('c-time'), way: checked('c-way') };
+    case 'contact': return { inn: $('c-inn').value.trim(), email: $('c-email').value.trim(), line: $('c-line').value.trim(), ig: $('c-ig').value.trim(), name: $('c-name').value.trim() };
+    case 'schedule': return { time: checked('c-time'), way: checked('c-way') };
     case 'consent': return $('consent').checked;
   }
 }
@@ -804,6 +810,9 @@ function buildPayload() {
     const r = raw(q);
     if (q.type === 'contact') {
       row['旅宿名稱'] = r.inn; row['電子郵件'] = r.email; row['LINE ID'] = r.line; row['Instagram'] = r.ig; row['稱呼'] = r.name;
+      return;
+    }
+    if (q.type === 'schedule') {
       row['方便聯繫時段'] = r.time.join('、');
       row['偏好訪談方式'] = r.way.join('、');
       return;
