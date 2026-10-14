@@ -6,7 +6,7 @@
 <title>旅宿營運現況調查</title>
 <meta name="theme-color" content="#fdf8e3">
 <meta name="color-scheme" content="only light">
-<meta name="description" content="共 6 題，約 2 分鐘。了解民宿與旅館業主的日常營運狀況。">
+<meta name="description" content="約 2 分鐘，了解民宿業主的日常營運狀況。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
@@ -80,7 +80,7 @@
   .hero-art { width: min(64vw, 260px); }
   .hero h1 {
     font-family: var(--serif); font-weight: 900;
-    font-size: clamp(40px, 10vw, 72px); line-height: 1.18; letter-spacing: .01em;
+    font-size: clamp(30px, 9vw, 60px); line-height: 1.2; letter-spacing: .01em;
     margin: 0 0 20px;
   }
   .hero p { color: var(--soft); max-width: 30em; margin: 0 0 6px; }
@@ -120,16 +120,20 @@
   .q.active, .q:focus-within, .no-io .q { opacity: 1; }
   .q h3 {
     font-family: var(--serif); font-weight: 700;
-    font-size: clamp(24px, 5.4vw, 33px); line-height: 1.45; margin: 0 0 6px; outline: none;
+    font-size: clamp(22px, 5.6vw, 31px); line-height: 1.45; margin: 0 0 8px; outline: none;
   }
-  .q .hint { color: var(--soft); margin: 0; font-size: 15px; }
+  .q .hint { color: var(--soft); margin: 0; font-size: 15px; line-height: 1.7; }
+
+  /* 避免標題或段落最後一行只剩一個字 */
+  h1, h2, h3, p, .opt-v, .opt-d { text-wrap: pretty; }
+  .nw { white-space: nowrap; }
   .opt-tag { font-family: var(--sans); font-weight: 400; font-size: 14px; color: var(--soft); margin-left: .5em; white-space: nowrap; }
 
   .opts { display: grid; gap: 10px; margin-top: 22px; }
   @media (min-width: 620px) { .opts.cols { grid-template-columns: 1fr 1fr; } }
   .opt {
     position: relative; display: flex; align-items: center; gap: 14px;
-    min-height: 58px; padding: 12px 20px;
+    min-height: 62px; padding: 14px 20px;
     border: 1.5px solid var(--line); border-radius: 14px;
     background: color-mix(in srgb, #fff 45%, transparent);
     cursor: pointer; line-height: 1.45;
@@ -150,8 +154,8 @@
 
   /* 選項說明 */
   .opt-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; text-align: left; }
-  .opt-v { font-weight: 500; }
-  .opt-d { font-size: 14px; line-height: 1.55; color: var(--soft); }
+  .opt-v { font-size: 18px; font-weight: 500; line-height: 1.5; }
+  .opt-d { font-size: 15px; line-height: 1.6; color: var(--soft); }
 
   /* 排序題 */
   .rank { display: grid; gap: 10px; margin-top: 22px; }
@@ -179,7 +183,10 @@
   }
   .field input::placeholder { color: color-mix(in srgb, var(--fg) 38%, var(--bg)); }
   .field input:focus { outline: none; border-bottom: 2.5px solid var(--accent); padding-bottom: 9px; }
-  .sub-label { margin: 26px 0 0; font-size: 15px; color: var(--soft); }
+  .sub-label { margin: 28px 0 0; font-size: 16px; font-weight: 500; color: var(--fg); }
+  .sub-label + .field.tight { margin-top: 6px; }
+  .field.tight { margin-top: 12px; }
+  .sub-note { margin: 4px 0 0; font-size: 14px; line-height: 1.65; color: var(--soft); max-width: 36em; }
   .perk {
     margin-top: 20px; padding: 16px 18px; border-radius: 14px;
     background: color-mix(in srgb, var(--glow) 16%, var(--bg));
@@ -223,6 +230,8 @@
 
   @media (max-width: 480px) {
     body { font-size: 16px; }
+    .opt-v { font-size: 17px; }
+    .opt, .rk { padding-left: 16px; padding-right: 16px; gap: 12px; }
     .q { padding: 64px 16px; }
     .hero, .ch-head, .scene, footer { padding-left: 16px; padding-right: 16px; }
     .hud-count { font-size: 13px; }
@@ -248,7 +257,7 @@
     <div class="hero-text">
       <h1 id="heroTitle">旅宿營運現況調查</h1>
       <p class="lead">每完成一題，這間房子就多亮一扇窗。</p>
-      <p>適用對象為客房數 15 間（含）以下的民宿與旅館業主。填答內容僅供研究使用，不會公開或轉售。</p>
+      <p>適用對象為客房數 15 間（含）以下的民宿業主。填答內容僅供研究使用，不會公開或轉售。</p>
       <div class="actions">
         <button type="button" class="btn" id="startBtn">開始</button>
         <span class="eta">約 2 分鐘</span>
@@ -285,7 +294,7 @@
    A. Web3Forms:貼上 Access Key,每份答案會寄到你的信箱
    B. Google Apps Script:貼上網頁應用程式網址,答案寫進試算表
    ========================================================= */
-const WEB3FORMS_KEY = 'bd7ea854-f843-414f-ae4c-18efe23d62cc';
+const WEB3FORMS_KEY = '';
 const ENDPOINT = '';
 
 /* =========================================================
@@ -491,13 +500,19 @@ function buildQuestion(q) {
     el.append(
       h('label', { class: 'field' }, h('span', {}, '旅宿名稱（選填）'),
         h('input', { type: 'text', id: 'c-inn', autocomplete: 'organization', placeholder: '請輸入旅宿名稱' })),
-      h('label', { class: 'field' }, h('span', {}, '聯絡方式（電子郵件）'),
+      h('p', { class: 'sub-label' }, '聯絡方式（至少填寫一項）'),
+      h('label', { class: 'field tight' }, h('span', {}, '電子郵件'),
         h('input', { type: 'email', id: 'c-email', autocomplete: 'email', inputmode: 'email', placeholder: 'name@example.com' })),
+      h('label', { class: 'field tight' }, h('span', {}, 'LINE ID'),
+        h('input', { type: 'text', id: 'c-line', autocomplete: 'off', autocapitalize: 'off', placeholder: '請輸入 LINE ID' })),
+      h('label', { class: 'field tight' }, h('span', {}, 'Instagram 帳號'),
+        h('input', { type: 'text', id: 'c-ig', autocomplete: 'off', autocapitalize: 'off', placeholder: '例如：@your_inn' })),
       h('label', { class: 'field' }, h('span', {}, '方便稱呼您的方式（選填）'),
         h('input', { type: 'text', id: 'c-name', autocomplete: 'name', placeholder: '例如：王先生、陳小姐' })),
       h('p', { class: 'sub-label' }, '方便聯繫的時段（選填，可複選）'),
       buildOptions(SUB_OPTS['c-time']),
       h('p', { class: 'sub-label' }, '偏好的訪談方式（選填，可複選）'),
+      h('p', { class: 'sub-note' }, '不熟悉這些軟體也沒關係。確認訪談時間後，我們會把會議連結傳給您，到時點選連結、依畫面指示加入即可；也可以先不選，我們再與您討論。'),
       buildOptions(SUB_OPTS['c-way'])
     );
   } else if (q.type === 'consent') {
@@ -547,7 +562,7 @@ function raw(q) {
     case 'single': return checked(q.id)[0] || '';
     case 'multi': return checked(q.id);
     case 'rank': return rankState[q.id].slice();
-    case 'contact': return { inn: $('c-inn').value.trim(), email: $('c-email').value.trim(), name: $('c-name').value.trim(), time: checked('c-time'), way: checked('c-way') };
+    case 'contact': return { inn: $('c-inn').value.trim(), email: $('c-email').value.trim(), line: $('c-line').value.trim(), ig: $('c-ig').value.trim(), name: $('c-name').value.trim(), time: checked('c-time'), way: checked('c-way') };
     case 'consent': return $('consent').checked;
   }
 }
@@ -569,7 +584,7 @@ function problem(q) {
     if (q.type === 'single' && !r) return '請選擇一個選項。';
     if (q.type === 'multi' && !r.length) return '請至少選擇一項。';
     if (q.type === 'rank' && !r.length) return '請至少選出 1 項。';
-    if (q.type === 'contact' && !r.email) return '請填寫電子郵件，以便後續聯繫。';
+    if (q.type === 'contact' && !(r.email || r.line || r.ig)) return '請至少填寫一種聯絡方式（電子郵件、LINE ID 或 Instagram 帳號）。';
     if (q.type === 'consent' && !r) return '請勾選同意後再送出。';
   }
   if (q.type === 'contact' && r.email && !EMAIL_RE.test(r.email)) return '電子郵件格式似乎不正確，請再確認。';
@@ -640,6 +655,7 @@ function evalGate(fromEl) {
   if (why) {
     $('outTitle').textContent = END_COPY[why].title;
     $('outBody').textContent = END_COPY[why].body;
+    ['outTitle', 'outBody'].forEach(id => { delete $(id).dataset.glued; glueTail($(id)); });
     out.hidden = false; rest.hidden = true;
     refreshLayout();
     recordScreenOut(why);
@@ -678,7 +694,7 @@ function updateProgress() {
   const req = allQs.filter(q => q.required && q.type !== 'consent' && isShown(q));
   const done = req.filter(q => {
     const r = raw(q);
-    const has = Array.isArray(r) ? r.length > 0 : q.type === 'contact' ? !!r.email : !!r;
+    const has = Array.isArray(r) ? r.length > 0 : q.type === 'contact' ? !!(r.email || r.line || r.ig) : !!r;
     return has && !problem(q);
   }).length;
   $('hudCount').textContent = `已答 ${done} / ${req.length}`;
@@ -787,7 +803,7 @@ function buildPayload() {
     if (!isShown(q)) return;
     const r = raw(q);
     if (q.type === 'contact') {
-      row['旅宿名稱'] = r.inn; row['電子郵件'] = r.email; row['稱呼'] = r.name;
+      row['旅宿名稱'] = r.inn; row['電子郵件'] = r.email; row['LINE ID'] = r.line; row['Instagram'] = r.ig; row['稱呼'] = r.name;
       row['方便聯繫時段'] = r.time.join('、');
       row['偏好訪談方式'] = r.way.join('、');
       return;
@@ -862,7 +878,8 @@ async function submit(btn) {
 function showThanks(payload) {
   $('thanksBody').textContent = payload.row['6. 訪談意願'] === '不願意'
     ? '您的回覆已送出，感謝您撥冗填答。'
-    : '您的回覆已送出。若適合進一步訪談，研究團隊會透過您留下的電子郵件與您聯繫。';
+    : '您的回覆已送出。若適合進一步訪談，研究團隊會透過您留下的聯絡方式與您聯繫。';
+  delete $('thanksBody').dataset.glued; glueTail($('thanksBody'));
   ['hero', 'chapter-0', 'rest', 'out', 'heroEnd'].forEach(id => { $(id).hidden = true; });
   applyChapter(CHAPTERS.length - 1);
   $('thanks').hidden = false;
@@ -953,6 +970,62 @@ if (G) {
     });
   }
 }
+
+
+/* 斷行保護:
+   1. 用瀏覽器內建的中文斷詞(Intl.Segmenter),讓換行只發生在詞與詞之間,不會把「什麼」拆成兩行
+   2. 最後兩個詞(含句尾標點)綁在一起,避免最後一行只剩一個字
+   不支援斷詞的舊瀏覽器,至少會做第 2 點 */
+const ORPHAN_SEL = 'h1, h2, h3, .lead, .hero p, .hint, .opt-v, .opt-d, .perk p, .sub-note, .sub-label, .scene p, .ch-head p:not(.ch-step)';
+const PUNCT = /^[，。？！、：；）」』,.?!:;)\]]+$/;
+const segmenter = (window.Intl && Intl.Segmenter) ? new Intl.Segmenter('zh-Hant', { granularity: 'word' }) : null;
+function nwSpan(text) { const sp = document.createElement('span'); sp.className = 'nw'; sp.textContent = text; return sp; }
+function glueTail(el) {
+  if (!el || el.dataset.glued) return;
+  el.dataset.glued = '1';
+  const nodes = [];
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  let n; while ((n = walker.nextNode())) { if (n.data.trim() && !n.parentElement.closest('.opt-tag')) nodes.push(n); }
+  if (!nodes.length) return;
+  if (segmenter) {
+    nodes.forEach((node, idx) => {
+      const words = [];
+      for (const seg of segmenter.segment(node.data)) {
+        const t = seg.segment;
+        if (/^\s+$/.test(t)) words.push({ space: t });
+        else if (PUNCT.test(t) && words.length && !words[words.length - 1].space) words[words.length - 1].text += t;
+        else words.push({ text: t });
+      }
+      // 最後一個文字節點:把最後兩個詞綁成一組
+      if (idx === nodes.length - 1) {
+        const real = words.map((w, i) => w.space ? -1 : i).filter(i => i >= 0);
+        if (real.length >= 2) {
+          const a = real[real.length - 2], b = real[real.length - 1];
+          if (b === a + 1) { words[a].text += words[b].text; words.splice(b, 1); }
+        }
+      }
+      const frag = document.createDocumentFragment();
+      words.forEach(w => frag.append(w.space ? document.createTextNode(w.space) : nwSpan(w.text)));
+      node.replaceWith(frag);
+    });
+    return;
+  }
+  // 舊瀏覽器:只綁最後兩個字
+  const last = nodes[nodes.length - 1];
+  const text = last.data.replace(/\s+$/, '');
+  let i = text.length, count = 0;
+  while (i > 0 && count < 2) {
+    const c = text[i - 1];
+    if (/\s/.test(c)) break;
+    if (!PUNCT.test(c)) count++;
+    i--;
+  }
+  if (i <= 0 || text.length - i < 2) return;
+  last.data = text.slice(0, i);
+  last.parentNode.insertBefore(nwSpan(text.slice(i)), last.nextSibling);
+}
+function glueAll(root) { (root || document).querySelectorAll(ORPHAN_SEL).forEach(glueTail); }
+glueAll();
 
 syncConditions();
 updateProgress();
