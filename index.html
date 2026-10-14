@@ -248,11 +248,10 @@
     <div class="hero-text">
       <h1 id="heroTitle">旅宿營運現況調查</h1>
       <p class="lead">每完成一題，這間房子就多亮一扇窗。</p>
-      <p>我們是 SCAP 專案生，想了解民宿與旅館業主在日常營運中的實際狀況，包括人力配置、營運痛點與入住方式。</p>
       <p>適用對象為客房數 15 間（含）以下的民宿與旅館業主。填答內容僅供研究使用，不會公開或轉售。</p>
       <div class="actions">
         <button type="button" class="btn" id="startBtn">開始</button>
-        <span class="eta">共 6 題，約 2 分鐘</span>
+        <span class="eta">約 2 分鐘</span>
       </div>
     </div>
   </section>
@@ -286,7 +285,7 @@
    A. Web3Forms:貼上 Access Key,每份答案會寄到你的信箱
    B. Google Apps Script:貼上網頁應用程式網址,答案寫進試算表
    ========================================================= */
-const WEB3FORMS_KEY = 'bd7ea854-f843-414f-ae4c-18efe23d62cc';
+const WEB3FORMS_KEY = '';
 const ENDPOINT = '';
 
 /* =========================================================
@@ -345,9 +344,12 @@ const CHAPTERS = [
           { v: '暫無導入意願', d: '目前沒有相關需求或導入計畫。' }
         ] }
     ] },
-  { name: '聯絡資訊', title: '最後，留下聯絡方式', note: '以下資訊僅供研究團隊後續聯繫及訪談邀請使用。',
+  { name: '訪談邀請', title: '最後，想多聊一點', note: '我們希望邀請部分業主進一步訪談。',
     qs: [
-      { id: 'contact', type: 'contact', label: '請問我們可以透過什麼方式與您聯繫？',
+      { id: 'interview', key: '6. 訪談意願', type: 'single', perk: true, label: '願意再花 30 分鐘，跟我們聊聊嗎？',
+        options: [ { v: '願意' }, { v: '想多了解一點' }, { v: '不願意' } ] },
+      { id: 'contact', type: 'contact', showIf: a => !!a.interview && a.interview !== '不願意',
+        label: '請問我們可以透過什麼方式與您聯繫？',
         hint: '以下資訊僅供研究團隊後續聯繫及訪談邀請使用。' },
       { id: 'agree', type: 'consent', label: '確認資料使用方式' }
     ] }
@@ -359,8 +361,8 @@ const SUB_OPTS = {
     { v: '平日白天（09:00–17:00）' }, { v: '平日晚上（18:30–21:00）' },
     { v: '週末白天（09:00–17:00）' }, { v: '週末晚上（18:30–21:00）' },
     { v: '時間彈性，皆可聯繫', exclusive: true } ] },
-  'c-way': { id: 'c-way', type: 'multi', options: [
-    { v: '電話通話' }, { v: 'LINE 語音通話' }, { v: '線上視訊會議（如 Google Meet 等）' } ] }
+  'c-way': { id: 'c-way', type: 'multi', cols: true, options: [
+    { v: 'Zoom' }, { v: 'Teams' }, { v: 'Google Meet' } ] }
 };
 
 const END_COPY = {
@@ -469,6 +471,10 @@ function buildQuestion(q) {
   const el = h('div', { class: 'q stop', id: 'q-' + q.id, role: 'group', 'aria-labelledby': hid, 'data-q': q.id });
   el.append(h('h3', { id: hid, tabindex: '-1' }, q.label, q.required === false ? h('span', { class: 'opt-tag' }, '選填') : ''));
   if (q.hint) el.append(h('p', { class: 'hint' }, q.hint));
+  if (q.perk) el.append(
+    h('aside', { class: 'perk', 'aria-label': '訪談感謝回饋' },
+      h('p', { class: 'perk-t' }, '訪談感謝回饋'),
+      h('p', {}, '為感謝願意接受訪談的業主，完成訪談後，我們也將協助在大學生相關社群分享及介紹您的旅宿，增加旅宿被年輕族群認識的機會！宣傳內容會事先與您確認，經同意後才會發布。')));
 
   const otherOpt = (q.options || []).find(o => o && o.other);
   let needsNext = q.type === 'multi' || q.type === 'rank' || !!otherOpt;
@@ -483,9 +489,6 @@ function buildQuestion(q) {
   } else if (q.type === 'contact') {
     needsNext = true;
     el.append(
-      h('aside', { class: 'perk', 'aria-label': '訪談感謝回饋' },
-        h('p', { class: 'perk-t' }, '訪談感謝回饋'),
-        h('p', {}, '為感謝願意接受訪談的業主，完成訪談後，我們也將協助在大學生相關社群分享及介紹您的旅宿，增加旅宿被年輕族群認識的機會！宣傳內容會事先與您確認，經同意後才會發布。')),
       h('label', { class: 'field' }, h('span', {}, '旅宿名稱（選填）'),
         h('input', { type: 'text', id: 'c-inn', autocomplete: 'organization', placeholder: '請輸入旅宿名稱' })),
       h('label', { class: 'field' }, h('span', {}, '聯絡方式（電子郵件）'),
@@ -857,7 +860,9 @@ async function submit(btn) {
 }
 
 function showThanks(payload) {
-  $('thanksBody').textContent = '您的回覆已送出。若適合進一步訪談，研究團隊會透過您留下的電子郵件與您聯繫。';
+  $('thanksBody').textContent = payload.row['6. 訪談意願'] === '不願意'
+    ? '您的回覆已送出，感謝您撥冗填答。'
+    : '您的回覆已送出。若適合進一步訪談，研究團隊會透過您留下的電子郵件與您聯繫。';
   ['hero', 'chapter-0', 'rest', 'out', 'heroEnd'].forEach(id => { $(id).hidden = true; });
   applyChapter(CHAPTERS.length - 1);
   $('thanks').hidden = false;
@@ -949,6 +954,7 @@ if (G) {
   }
 }
 
+syncConditions();
 updateProgress();
 </script>
 </body>
