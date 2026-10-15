@@ -296,7 +296,7 @@
    A. Web3Forms:貼上 Access Key,每份答案會寄到你的信箱
    B. Google Apps Script:貼上網頁應用程式網址,答案寫進試算表
    ========================================================= */
-const WEB3FORMS_KEY = 'bd7ea854-f843-414f-ae4c-18efe23d62cc';
+const WEB3FORMS_KEY = '';
 const ENDPOINT = '';
 
 /* =========================================================
@@ -304,11 +304,6 @@ const ENDPOINT = '';
    ========================================================= */
 // 第 1 題選「16 間（含）以上」時是否直接結束問卷(true = 結束;false = 繼續填答)
 const SCREEN_OUT_LARGE = true;
-
-// 第 5 題選「暫無導入意願」時,跳過訪談邀請,直接到「確認資料使用方式」
-const NO_INTEREST = '暫無導入意願';
-const askInterview = a => a.q5 !== NO_INTEREST;
-const wantsTalk = a => askInterview(a) && !!a.interview && a.interview !== '不願意';
 
 const CHAPTERS = [
   { name: '旅宿規模', title: '先從旅宿的規模開始', note: '一個問題，確認這份問卷是否適合您。',
@@ -356,17 +351,17 @@ const CHAPTERS = [
           { v: '已導入使用', d: '目前已使用無人化或自助入住系統。' },
           { v: '有興趣導入', d: '尚未導入，但有意願進一步了解或嘗試。' },
           { v: '尚在評估', d: '正在評估需求、成本或實際可行性。' },
-          { v: NO_INTEREST, d: '目前沒有相關需求或導入計畫。' }
+          { v: '暫無導入意願', d: '目前沒有相關需求或導入計畫。' }
         ] }
     ] },
   { name: '訪談邀請', title: '最後，想多聊一點', note: '我們希望邀請部分業主進一步訪談。',
     qs: [
-      { id: 'interview', key: '6. 訪談意願', type: 'single', perk: true, showIf: askInterview, label: '願意再花 30 分鐘，跟我們聊聊嗎？',
+      { id: 'interview', key: '6. 訪談意願', type: 'single', perk: true, label: '願意再花 30 分鐘，跟我們聊聊嗎？',
         options: [ { v: '願意' }, { v: '想多了解一點' }, { v: '不願意' } ] },
-      { id: 'contact', type: 'contact', showIf: wantsTalk,
+      { id: 'contact', type: 'contact', showIf: a => !!a.interview && a.interview !== '不願意',
         label: '請問我們可以透過什麼方式與您聯繫？',
         hint: '以下資訊僅供研究團隊後續聯繫及訪談邀請使用。' },
-      { id: 'schedule', type: 'schedule', required: false, showIf: wantsTalk,
+      { id: 'schedule', type: 'schedule', required: false, showIf: a => !!a.interview && a.interview !== '不願意',
         label: '請問方便與您聯繫的時段與訪談方式？',
         hint: '兩項皆為選填，可複選。' },
       { id: 'agree', type: 'consent', label: '確認資料使用方式' }
@@ -653,10 +648,6 @@ function syncConditions() {
       if (ow.hidden === on) { ow.hidden = !on; changed = true; }
     }
   });
-  // 跳過訪談邀請時,一併隱藏該段落的開頭
-  const lastHead = document.querySelector('#chapter-' + (CHAPTERS.length - 1) + ' .ch-head');
-  const headOn = isShown(byId.interview);
-  if (lastHead && lastHead.hidden === headOn) { lastHead.hidden = !headOn; changed = true; }
   if (changed) refreshLayout();
 }
 
@@ -842,7 +833,7 @@ $('outBack').addEventListener('click', () => { const f = $('q-q1'); scrollToEl(f
 function buildPayload() {
   const row = {};
   allQs.forEach(q => {
-    if (!isShown(q)) { if (q.id === 'interview') row[q.key] = '未詢問（暫無導入意願）'; return; }
+    if (!isShown(q)) return;
     const r = raw(q);
     if (q.type === 'contact') {
       row['旅宿名稱'] = r.inn; row['電子郵件'] = r.email; row['LINE ID'] = r.line; row['Instagram'] = r.ig; row['稱呼'] = r.name;
@@ -921,7 +912,7 @@ async function submit(btn) {
 }
 
 function showThanks(payload) {
-  $('thanksBody').textContent = !isShown(byId.contact)
+  $('thanksBody').textContent = payload.row['6. 訪談意願'] === '不願意'
     ? '您的回覆已送出，感謝您撥冗填答。'
     : '您的回覆已送出。若適合進一步訪談，研究團隊會透過您留下的聯絡方式與您聯繫。';
   delete $('thanksBody').dataset.glued; glueTail($('thanksBody'));
